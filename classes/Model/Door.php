@@ -212,6 +212,33 @@ class Model_Door extends Model
 	
 	}
 	
+public function getAccessCategories($id_door)//получение категорий доступа для точки прохода
+{
+    $sql = 'SELECT a.ID_ACCESS, a.ID_DEV, a.ID_ACCESSNAME,
+                   an.NAME
+            FROM ACCESS a
+            JOIN ACCESSNAME an ON an.ID_ACCESSNAME = a.ID_ACCESSNAME
+            WHERE a.ID_DEV = ' . $id_door . '
+            ORDER BY an.NAME';
+     
+    $query = DB::query(Database::SELECT, $sql)
+        ->execute(Database::instance('fb'))
+        ->as_array();
+        
+    $res = array();
+    foreach ($query as $key => $value) {
+        foreach ($value as $name => $data) {
+            if($name == 'NAME') {
+                $res[$key][$name] = iconv('windows-1251', 'UTF-8', $data);
+            } else {
+                $res[$key][$name] = $data;
+            }
+        }
+    }
+    return $res;
+}
+
+
 }
 	
 

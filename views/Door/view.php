@@ -1,30 +1,5 @@
 <!-- Таблица вывода информации по выбранному устройству -->
-<script type="text/javascript">
-  	$(function() {		
-		$("#table1").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
-		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
-	});	
-	
-	$(function() {		
-		$("#table2").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
-		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
-	});
 
-	$(function() {		
-		$("#table3").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
-		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
-	});	
-		
-	$(function() {		
-		$("#table4").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
-		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
-	});
-
-	$(function() {		
-		$("#table5").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
-		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
-	});	
-</script>
 
 
 	
@@ -86,7 +61,78 @@
  </div> 
 </div>
 	
-	
+	<?php // БЛОК: Категории доступа (сворачиваемый) ?>
+<div class="panel panel-info" id="accessPanel">
+    <div class="panel-heading" role="tab" id="accessHeading">
+        <h3 class="panel-title">
+            <a role="button" 
+               data-toggle="collapse" 
+               data-parent="#accordion" 
+               href="#accessCollapse" 
+               aria-expanded="true" 
+               aria-controls="accessCollapse"
+               id="accessToggle"
+               style="display: block; text-decoration: none; color: inherit;">
+                <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                <?php echo __('Категории доступа, содержащие данную точку прохода'); ?>
+                <span class="badge pull-right">
+                    <?php echo isset($access_categories) ? count($access_categories) : 0; ?>
+                </span>
+                <span class="pull-right toggle-icon" style="margin-right: 10px;">
+                    <span class="glyphicon glyphicon-chevron-up" aria-hidden="true" id="iconCollapse"></span>
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true" id="iconExpand" style="display: none;"></span>
+                </span>
+            </a>
+        </h3>
+    </div>
+    <div id="accessCollapse" 
+         class="panel-collapse collapse in" 
+         role="tabpanel" 
+         aria-labelledby="accessHeading">
+        <div class="panel-body">
+            <?php if (isset($access_categories) && !empty($access_categories)): ?>
+                <div class="row">
+                    <?php 
+                    $total_categories = count($access_categories);
+                    $columns = 3;
+                    $per_column = ceil($total_categories / $columns);
+                    $current_index = 0;
+                    ?>
+                    
+                    <?php for ($col = 0; $col < $columns; $col++): ?>
+                        <div class="col-md-4 col-sm-6">
+                            <?php for ($i = 0; $i < $per_column && $current_index < $total_categories; $i++, $current_index++): 
+                                $category = $access_categories[$current_index];
+                            ?>
+                                <div style="margin-bottom: 5px;">
+                                    <span class="label label-primary" style="display: inline-block; padding: 5px 10px; font-size: 12px; width: 100%;">
+                                        <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
+                                        <?php echo htmlspecialchars($category['NAME']); ?>
+                                        <small class="text-muted" style="color: #d9edf7; float: right;">
+                                            ID: <?php echo $category['ID_ACCESS']; ?>
+                                        </small>
+                                    </span>
+                                </div>
+                            <?php endfor; ?>
+                        </div>
+                    <?php endfor; ?>
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <small class="text-muted">
+                        <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+                        <?php echo __('Всего категорий') . ': ' . count($access_categories); ?>
+                    </small>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-info" style="margin: 0;">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    <?php echo __('Точка прохода не входит ни в одну категорию доступа'); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
 	
     <?
 	$cc=0;
@@ -356,3 +402,85 @@
       </div>
 
    </div>	
+   <script type="text/javascript">
+  	$(function() {		
+		$("#table1").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
+		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
+	});	
+	
+	$(function() {		
+		$("#table2").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
+		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
+	});
+
+	$(function() {		
+		$("#table3").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
+		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
+	});	
+		
+	$(function() {		
+		$("#table4").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
+		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
+	});
+
+	$(function() {		
+		$("#table5").tablesorter({sortList:[[0,0],[2,1]], widgets: ['zebra']});
+		$("#options").tablesorter({sortList: [[0,0]], headers: { 0:{sorter: false}}});
+	});	
+	
+	// ===== Управление иконкой для категорий доступа =====
+$('#accessCollapse').on('shown.bs.collapse', function() {
+    $('#iconCollapse').show();
+    $('#iconExpand').hide();
+    $('#accessToggle').attr('aria-expanded', 'true');
+});
+
+$('#accessCollapse').on('hidden.bs.collapse', function() {
+    $('#iconCollapse').hide();
+    $('#iconExpand').show();
+    $('#accessToggle').attr('aria-expanded', 'false');
+});
+
+if ($('#accessCollapse').hasClass('in')) {
+    $('#iconCollapse').show();
+    $('#iconExpand').hide();
+    $('#accessToggle').attr('aria-expanded', 'true');
+} else {
+    $('#iconCollapse').hide();
+    $('#iconExpand').show();
+    $('#accessToggle').attr('aria-expanded', 'false');
+}
+</script>
+<style>
+/* Стили для категорий доступа */
+#accessPanel .label {
+    transition: all 0.2s ease;
+}
+
+#accessPanel .label:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Стили для сворачиваемых блоков */
+.panel-heading a {
+    transition: all 0.3s ease;
+}
+
+.panel-heading a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.toggle-icon .glyphicon {
+    transition: transform 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    #accessPanel .label {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+}
+</style>
