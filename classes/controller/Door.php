@@ -35,30 +35,33 @@ class Controller_Door extends Controller_Template
         }
     }
     
-    public function action_doorInfo($id_door = false)
-    {
-        $id_door = $this->request->param('id');
-        $_SESSION['menu_active'] = 'door';
-        
-        if ($id_door == NULL) {
-            $this->redirect('door/find');
-        }
-        
-        // Получаем все данные
-        $door_data = Model::Factory('Door')->getDoor($id_door);
-        
-        $data = array(
-            'door' => $door_data,
-            'people_add' => Model::Factory('Door')->getDoorLoadorder($id_door),
-            'people_del' => Model::Factory('Door')->getDoorDeleteOrder($id_door),
-            'events' => Model::Factory('Event')->event_door($id_door),
-            'keys' => Model::Factory('Door')->getKeysForDoor($id_door),
-            'card_type' => Model::Factory('Door')->getCardType(),
-            'enable_card_type' => Model::Factory('Door')->getEnableCardType(Arr::get($door_data, 'ID_DEVTYPE')),
-            'access_categories' => Model::Factory('Door')->getAccessCategories($id_door),
-        );
-        
-        $content = View::Factory('door/view', $data);
-        $this->template->content = $content;
+ public function action_doorInfo($id_door = false)
+{
+    $id_door = $this->request->param('id');
+    $_SESSION['menu_active'] = 'door';
+    
+    if ($id_door == NULL) {
+        $this->redirect('door/find');
     }
+    
+    // Получаем все данные
+    $door_data = Model::Factory('Door')->getDoor($id_door);
+    
+    $data = array(
+        'door' => $door_data,
+        'people_add' => Model::Factory('Door')->getDoorLoadorder($id_door),
+        'people_del' => Model::Factory('Door')->getDoorDeleteOrder($id_door),
+        'events' => Model::Factory('Event')->event_door($id_door),
+        'keys' => Model::Factory('Door')->getKeysForDoor($id_door),
+        'card_type' => Model::Factory('Door')->getCardType(),
+        'enable_card_type' => Model::Factory('Door')->getEnableCardType(Arr::get($door_data, 'ID_DEVTYPE')),
+        'access_categories' => Model::Factory('Door')->getAccessCategories($id_door),
+        'device_groups' => Model::Factory('Door')->getDeviceGroupsWithHierarchy($id_door), 
+    );
+    
+    $content = View::Factory('door/view', $data);
+    $this->template->content = $content;
+}
+	
+	
 }

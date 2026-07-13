@@ -26,6 +26,9 @@ include_once 'partials/_helpers.php';
 <!-- Категории доступа -->
 <?php include_once 'partials/_access_categories.php'; ?>
 
+<!-- Группы устройств -->
+<?php include_once 'partials/_device_groups.php'; ?>
+
 <!-- Вкладки -->
 <?php
 // Подсчет количества записей для каждой вкладки
@@ -103,7 +106,8 @@ function initTables() {
 
 function setupCollapsibleIcons() {
     var panels = [
-        { id: 'accessCollapse', iconUp: '#iconCollapse', iconDown: '#iconExpand', toggle: '#accessToggle' }
+        { id: 'accessCollapse', iconUp: '#iconCollapse', iconDown: '#iconExpand', toggle: '#accessToggle' },
+        { id: 'deviceGroupsCollapse', iconUp: '#deviceGroupsIconCollapse', iconDown: '#deviceGroupsIconExpand', toggle: '#deviceGroupsToggle' }
     ];
     
     panels.forEach(function(panel) {
@@ -171,6 +175,30 @@ function filterTable(input, tableId) {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* Стили для групп устройств */
+#deviceGroupsPanel .label {
+    transition: all 0.2s ease;
+}
+
+#deviceGroupsPanel .label:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Стиль для цепочки родителей */
+#deviceGroupsPanel .glyphicon-share-alt {
+    opacity: 0.6;
+}
+
+#deviceGroupsPanel .label-success {
+    background-color: #5cb85c;
+}
+
+/* Стиль для отображения цепочки */
+#deviceGroupsPanel .glyphicon-folder-close {
+    margin-right: 3px;
+}
+
 /* Стили для сворачиваемых блоков */
 .panel-heading a {
     transition: all 0.3s ease;
@@ -188,6 +216,11 @@ function filterTable(input, tableId) {
 /* Адаптивность */
 @media (max-width: 768px) {
     #accessPanel .label {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+    
+    #deviceGroupsPanel .label {
         font-size: 11px !important;
         padding: 4px 8px !important;
     }

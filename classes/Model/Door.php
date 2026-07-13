@@ -239,6 +239,115 @@ public function getAccessCategories($id_door)//получение категор
 }
 
 
+/**
+ * Получение групп устройств, содержащих точку прохода
+ * с построением цепочки родителей через хранимую процедуру
+ */
+public function getDeviceGroups($id_door)
+{
+    // Получаем группы, в которые входит устройство
+    $sql = 'SELECT ID_DEVGROUP, ID_DEV, ID_PARENT, NAME
+            FROM DEVGROUP
+            WHERE ID_DEV = ' . $id_door . '
+            ORDER BY NAME';
+     
+    $query = DB::query(Database::SELECT, $sql)
+        ->execute(Database::instance('fb'))
+        ->as_array();
+        
+    $res = array();
+    foreach ($query as $key => $value) {
+        $res[$key]['ID_DEVGROUP'] = Arr::get($value, 'ID_DEVGROUP');
+        $res[$key]['ID_DEV'] = Arr::get($value, 'ID_DEV');
+        $res[$key]['ID_PARENT'] = Arr::get($value, 'ID_PARENT');
+        $res[$key]['NAME'] = iconv('windows-1251', 'UTF-8', Arr::get($value, 'NAME'));
+        
+        // Получаем цепочку родителей через хранимую процедуру
+        $res[$key]['PARENT_CHAIN'] = $this->getParentChainFromProc(Arr::get($value, 'ID_PARENT'));
+    }
+    
+    return $res;
+}
+
+/**
+ * Получение цепочки родителей через хранимую процедуру DEVGROUP_GETPARETN
+ */
+private function getParentChainFromProc($id_parent)
+{
+    $chain = array();
+    
+    if ($id_parent == 1 || $id_parent == 0 || $id_parent === null) {
+        return $chain;
+    }
+    
+    // Вызов хранимой процедуры
+    $sql = 'SELECT ID_DEVGROUP, ID_DEV, NAME, ID_PARENT
+            FROM DEVGROUP_GETPARETN(1, ' . $id_parent . ')';
+    
+    $query = DB::query(Database::SELECT, $sql)
+        ->execute(Database::instance('fb'))
+        ->as_array();
+    
+    foreach ($query as $row) {
+        $chain[] = array(
+            'ID_DEVGROUP' => Arr::get($row, 'ID_DEVGROUP'),
+            'ID_DEV' => Arr::get($row, 'ID_DEV'),
+            'NAME' => iconv('windows-1251', 'UTF-8', Arr::get($row, 'NAME')),
+            'ID_PARENT' => Arr::get($row, 'ID_PARENT')
+        );
+    }
+    
+    return $chain;
+}
+
+/**
+ * Альтернативный метод - получаем все группы устройства с полной иерархией
+ * через хранимую процедуру
+ */
+public function getDeviceGroupsWithHierarchy($id_door)
+{
+    // Получаем группы, в которые входит устройство
+    $sql = 'SELECT ID_DEVGROUP, ID_DEV, ID_PARENT, NAME
+            FROM DEVGROUP
+            WHERE ID_DEV = ' . $id_door . '
+            ORDER BY NAME';
+     
+    $query = DB::query(Database::SELECT, $sql)
+        ->execute(Database::instance('fb'))
+        ->as_array();
+        
+    $res = array();
+    foreach ($query as $key => $value) {
+        $id_parent = Arr::get($value, 'ID_PARENT');
+        $group_name = iconv('windows-1251', 'UTF-8', Arr::get($value, 'NAME'));
+        
+        // Получаем цепочку родителей
+        $parent_chain = $this->getParentChainFromProc($id_parent);
+        
+        // Формируем полный путь
+        $full_path = $group_name;
+        if (!empty($parent_chain)) {
+            $chain_names = array();
+            foreach ($parent_chain as $parent) {
+                $chain_names[] = $parent['NAME'];
+            }
+            $full_path = implode(' → ', $chain_names) . ' → ' . $group_name;
+        }
+        
+        $res[$key] = array(
+            'ID_DEVGROUP' => Arr::get($value, 'ID_DEVGROUP'),
+            'ID_DEV' => Arr::get($value, 'ID_DEV'),
+            'ID_PARENT' => $id_parent,
+            'NAME' => $group_name,
+            'PARENT_CHAIN' => $parent_chain,
+            'FULL_PATH' => $full_path,
+            'LEVEL' => count($parent_chain)
+        );
+    }
+    
+    return $res;
+}
+
 }
 	
 
