@@ -3,58 +3,57 @@
 class Model_Door extends Model
 {
 	
-	public function findIdDoor ($search) // поиск двери по названию
-	{
-	if ($search == NULL) return NULL;
-	//echo Debug::vars('9', strlen($search)); //exit;
-	//if(strlen($search)<2) return NULL;
-	
-	$sql='select distinct d.id_dev, d.name, d."ACTIVE" , d2.id_dev as id_dev_dev, d2.name as device_name, d2."ACTIVE" as device_active, s.name as server_name, s.ip, s.port, s."ACTIVE" as server_active, cd.operation, count(*) from device d
+public function findIdDoor ($search) // поиск двери по названию
+{
+    // Если поиск пустой - возвращаем пустой массив, а не NULL
+    if ($search == NULL || trim($search) == '') {
+        return array();
+    }
+    
+    // Если длина меньше 2 символов - возвращаем пустой массив
+    if(strlen($search) < 2) {
+        return array();
+    }
+    
+    $sql='select distinct d.id_dev, d.name, d."ACTIVE" , d2.id_dev as id_dev_dev, d2.name as device_name, d2."ACTIVE" as device_active, s.name as server_name, s.ip, s.port, s."ACTIVE" as server_active, cd.operation, count(*) from device d
         join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
         join server s on d2.id_server=s.id_server
         left join cardindev cd on d.id_dev=cd.id_dev
         where d.name containing \''.$search.'\' and
         d.id_reader is not null
         group by d.id_dev, d.name, d."ACTIVE" , d2.id_dev, d2.name, d2."ACTIVE", s.name, s.ip, s.port, s."ACTIVE", cd.operation';
-		
-	if(is_numeric($search)) 
-	{
-	$sql='select distinct d.id_dev, d.name, d."ACTIVE" , d2.id_dev as id_dev_dev, d2.name as device_name, d2."ACTIVE" as device_active, s.name as server_name, s.ip, s.port, s."ACTIVE" as server_active, cd.operation, count(*) from device d
-        join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-        join server s on d2.id_server=s.id_server
-        left join cardindev cd on d.id_dev=cd.id_dev
-        where (d.name containing \''.$search.'\' and
-        d.id_reader is not null) or (
-		d.id_dev='.$search.')
-        group by d.id_dev, d.name, d."ACTIVE" , d2.id_dev, d2.name, d2."ACTIVE", s.name, s.ip, s.port, s."ACTIVE", cd.operation';
+        
+    if(is_numeric($search)) 
+    {
+        $sql='select distinct d.id_dev, d.name, d."ACTIVE" , d2.id_dev as id_dev_dev, d2.name as device_name, d2."ACTIVE" as device_active, s.name as server_name, s.ip, s.port, s."ACTIVE" as server_active, cd.operation, count(*) from device d
+            join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
+            join server s on d2.id_server=s.id_server
+            left join cardindev cd on d.id_dev=cd.id_dev
+            where (d.name containing \''.$search.'\' and
+            d.id_reader is not null) or (
+            d.id_dev='.$search.')
+            group by d.id_dev, d.name, d."ACTIVE" , d2.id_dev, d2.name, d2."ACTIVE", s.name, s.ip, s.port, s."ACTIVE", cd.operation';
+    }       
 
-
-	}		
-
-		$query = DB::query(Database::SELECT, iconv('UTF-8','windows-1251',$sql))
-			->execute(Database::instance('fb'))
-			->as_array();
-	//echo Debug::vars('28',$sql,  $query); exit;
-
-	
-	$res=array();
-		foreach ($query as $key=>$value)
-		{
-			foreach ($value as $name=>$data)
-				{
-					
-					if($name=='NAME' or $name=='DEVICE_NAME' or $name=='SERVER_NAME')
-						{ $res[$key][$name]=iconv('windows-1251','UTF-8',$data);
-						
-						} else {
-						
-						$res[$key][$name]=$data;
-						}
-				}
-
-		}
-	return $res;
-	}
+    $query = DB::query(Database::SELECT, iconv('UTF-8','windows-1251',$sql))
+        ->execute(Database::instance('fb'))
+        ->as_array();
+    
+    $res=array();
+    foreach ($query as $key=>$value)
+    {
+        foreach ($value as $name=>$data)
+        {
+            if($name=='NAME' or $name=='DEVICE_NAME' or $name=='SERVER_NAME')
+            { 
+                $res[$key][$name]=iconv('windows-1251','UTF-8',$data);
+            } else {
+                $res[$key][$name]=$data;
+            }
+        }
+    }
+    return $res;
+}
 	
 	
 	
