@@ -308,47 +308,53 @@ $(function() {
             </div>
         </div>
         
-        <!-- Выбор даты -->
-        <div class="row" style="margin-bottom: 15px;">
-            <div class="col-xs-5">
-                <div class="form-group">
-                    <label class="control-label" style="font-weight: normal; font-size: 12px; color: #999;">
-                        <?php echo __('Дата с'); ?>
-                    </label>
-                    <div class="input-group date" id="datetimepicker1">
-                        <input type="text" class="form-control" name="timeFrom" 
-                               placeholder="DD.MM.YYYY HH:mm"
-                               value="<?php echo isset($timeFrom) ? htmlspecialchars($timeFrom) : ''; ?>">
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-1 text-center" style="padding-top: 25px;">
-                <span class="text-muted">—</span>
-            </div>
-            <div class="col-xs-5">
-                <div class="form-group">
-                    <label class="control-label" style="font-weight: normal; font-size: 12px; color: #999;">
-                        <?php echo __('Дата по'); ?>
-                    </label>
-                    <div class="input-group date" id="datetimepicker2">
-                        <input type="text" class="form-control" name="timeTo" 
-                               placeholder="DD.MM.YYYY HH:mm"
-                               value="<?php echo isset($timeTo) ? htmlspecialchars($timeTo) : ''; ?>">
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-1" style="padding-top: 25px;">
-                <button type="button" class="btn btn-sm btn-success" id="applyDateFilter">
-                    <span class="glyphicon glyphicon-ok"></span>
-                </button>
-            </div>
+<!-- Фильтр по дате событий -->
+<div class="row" style="margin-bottom: 15px; background: #f9f9f9; padding: 12px 15px; border-radius: 4px; border: 1px solid #e7e7e7;">
+    <div class="col-md-12">
+        <div style="margin-bottom: 8px;">
+            <span class="glyphicon glyphicon-calendar" style="color: #337ab7;"></span>
+            <strong style="font-size: 13px;"><?php echo __('Фильтр по дате событий'); ?></strong>
+            <span style="font-weight: normal; font-size: 11px; color: #999; margin-left: 10px;">
+                <span class="glyphicon glyphicon-info-sign"></span>
+                <?php echo __('Выберите период для фильтрации'); ?>
+            </span>
         </div>
+        <div class="row">
+            <div class="col-xs-5">
+                <div class="input-group date" id="datetimepicker1">
+                    <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
+                        <?php echo __('С'); ?>
+                    </span>
+                    <input type="text" class="form-control" name="timeFrom" 
+                           placeholder="DD.MM.YYYY HH:mm"
+                           value="<?php echo isset($timeFrom) ? htmlspecialchars($timeFrom) : ''; ?>"
+                           style="font-size: 13px;">
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-xs-1 text-center" style="padding-top: 5px;">
+                <span class="text-muted" style="font-size: 18px;">—</span>
+            </div>
+            <div class="col-xs-5">
+                <div class="input-group date" id="datetimepicker2">
+                    <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
+                        <?php echo __('По'); ?>
+                    </span>
+                    <input type="text" class="form-control" name="timeTo" 
+                           placeholder="DD.MM.YYYY HH:mm"
+                           value="<?php echo isset($timeTo) ? htmlspecialchars($timeTo) : ''; ?>"
+                           style="font-size: 13px;">
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
         
         <!-- Таблица результатов -->
         <div class="table-responsive" style="margin-top: 15px;">
