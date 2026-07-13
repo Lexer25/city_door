@@ -32,10 +32,20 @@ $(function() {
         $("#datetimepicker1").data("DateTimePicker").setMaxDate(e.date);
     });
     
-    // Инициализация таблицы
+    // Инициализация таблицы с настройками сортировки
     $("#table1").tablesorter({
         sortList: [[0, 0]],
-        headers: {}
+        headers: {
+            0: { sorter: 'digit' },    // ID - числовая сортировка
+            1: { sorter: 'text' },     // Название - текстовая сортировка
+            2: { sorter: 'text' },     // Устройство - текстовая сортировка
+            3: { sorter: 'text' },     // Сервер - текстовая сортировка
+            4: { sorter: false }       // Действия - сортировка отключена
+        },
+        cssAsc: 'tablesorter-headerAsc',
+        cssDesc: 'tablesorter-headerDesc',
+        cssHeader: 'tablesorter-header',
+        widgets: ['zebra']
     });
     
     // ========== Обработчик ввода ==========
@@ -54,7 +64,7 @@ $(function() {
             
             if (!timeFrom && !timeTo) {
                 // Нет ни поиска, ни дат - показываем сообщение
-                $('#table1 tbody').html('<tr><td colspan="4" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+                $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
                 $('#totalRecords').text(0);
             } else {
                 // Есть даты - отправляем запрос с пустым поиском
@@ -105,7 +115,7 @@ $(function() {
         $('input[name="timeTo"]').val('');
         $('#doorSearchInput').val('');
         $('#searchHelp').hide();
-        $('#table1 tbody').html('<tr><td colspan="4" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+        $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
         $('#totalRecords').text(0);
     });
     
@@ -117,7 +127,7 @@ $(function() {
         var timeFrom = $('input[name="timeFrom"]').val();
         var timeTo = $('input[name="timeTo"]').val();
         if (!timeFrom && !timeTo) {
-            $('#table1 tbody').html('<tr><td colspan="4" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
             $('#totalRecords').text(0);
         } else {
             performSearch();
@@ -132,7 +142,7 @@ $(function() {
         
         // Если поиск пустой и даты не выбраны - НЕ отправляем запрос
         if (!term && !timeFrom && !timeTo) {
-            $('#table1 tbody').html('<tr><td colspan="4" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
             $('#totalRecords').text(0);
             return;
         }
@@ -207,7 +217,7 @@ $(function() {
         $tbody.empty();
         
         if (!data || data.length === 0) {
-            $tbody.html('<tr><td colspan="4" class="text-center text-muted"><?php echo __('Ничего не найдено'); ?></td></tr>');
+            $tbody.html('<tr><td colspan="5" class="text-center text-muted"><?php echo __('Ничего не найдено'); ?></td></tr>');
             $('#totalRecords').text(0);
             return;
         }
@@ -216,7 +226,8 @@ $(function() {
             var row = '<tr>' +
                 '<td>' + item.ID_DEV + '</td>' +
                 '<td><a href="<?php echo URL::site("door/doorInfo"); ?>/' + item.ID_DEV + '">' + escapeHtml(item.NAME) + '</a></td>' +
-                '<td>' + (item.DATE || '—') + '</td>' +
+                '<td>' + escapeHtml(item.DEVICE_NAME || '—') + '</td>' +
+                '<td>' + escapeHtml(item.SERVER_NAME || '—') + '</td>' +
                 '<td><a href="<?php echo URL::site("door/doorInfo"); ?>/' + item.ID_DEV + '" class="btn btn-xs btn-info"><span class="glyphicon glyphicon-eye-open"></span></a></td>' +
                 '</tr>';
             $tbody.append(row);
@@ -239,6 +250,8 @@ $(function() {
                 $data[] = array(
                     'ID_DEV' => $item['ID_DEV'],
                     'NAME' => $item['NAME'],
+                    'DEVICE_NAME' => isset($item['DEVICE_NAME']) ? $item['DEVICE_NAME'] : '',
+                    'SERVER_NAME' => isset($item['SERVER_NAME']) ? $item['SERVER_NAME'] : '',
                     'DATE' => isset($item['DATE']) ? $item['DATE'] : ''
                 );
             }
@@ -344,7 +357,8 @@ $(function() {
                     <tr>
                         <th>ID</th>
                         <th><?php echo __('Название'); ?></th>
-                        <th><?php echo __('Дата'); ?></th>
+                        <th><?php echo __('Устройство'); ?></th>
+                        <th><?php echo __('Сервер'); ?></th>
                         <th><?php echo __('Действия'); ?></th>
                     </tr>
                 </thead>
@@ -358,7 +372,8 @@ $(function() {
                                         <?php echo htmlspecialchars($item['NAME']); ?>
                                     </a>
                                 </td>
-                                <td><?php echo isset($item['DATE']) ? $item['DATE'] : '—'; ?></td>
+                                <td><?php echo isset($item['DEVICE_NAME']) ? htmlspecialchars($item['DEVICE_NAME']) : '—'; ?></td>
+                                <td><?php echo isset($item['SERVER_NAME']) ? htmlspecialchars($item['SERVER_NAME']) : '—'; ?></td>
                                 <td>
                                     <a href="<?php echo URL::site('door/doorInfo/' . $item['ID_DEV']); ?>" 
                                        class="btn btn-xs btn-info">
@@ -369,7 +384,7 @@ $(function() {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center text-muted">
+                            <td colspan="5" class="text-center text-muted">
                                 <?php echo isset($searchTerm) && !empty($searchTerm) ? __('Ничего не найдено') : __('Введите поисковый запрос или выберите даты'); ?>
                             </td>
                         </tr>
@@ -400,5 +415,77 @@ $(function() {
 }
 .table-responsive .table > tbody > tr > td {
     vertical-align: middle;
+}
+.table-responsive .table > thead > tr > th {
+    white-space: nowrap;
+}
+
+/* ===== Стили для сортировки таблицы ===== */
+#table1 .tablesorter-header {
+    cursor: pointer;
+    position: relative;
+    padding-right: 25px !important;
+    user-select: none;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease;
+}
+
+#table1 .tablesorter-header:hover {
+    background-color: #e9e9e9;
+}
+
+#table1 .tablesorter-header:after {
+    font-family: 'Glyphicons Halflings';
+    font-size: 10px;
+    color: #bbb;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    content: "\e151"; /* glyphicon glyphicon-sort */
+}
+
+#table1 .tablesorter-headerAsc:after {
+    content: "\e155"; /* glyphicon glyphicon-triangle-top */
+    color: #337ab7;
+}
+
+#table1 .tablesorter-headerDesc:after {
+    content: "\e156"; /* glyphicon glyphicon-triangle-bottom */
+    color: #337ab7;
+}
+
+#table1 .tablesorter-headerAsc,
+#table1 .tablesorter-headerDesc {
+    background-color: #e8f0fe;
+}
+
+#table1 .tablesorter-header.sorter-false {
+    cursor: default;
+    padding-right: 8px !important;
+}
+
+#table1 .tablesorter-header.sorter-false:after {
+    content: "";
+    display: none;
+}
+
+/* Zebra виджет - чередование строк */
+#table1 tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#table1 tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+#table1 tbody tr:hover {
+    background-color: #e8f0fe !important;
+}
+
+/* Стили для закрепленной шапки */
+#table1 thead th {
+    border-bottom: 2px solid #ddd;
+    font-weight: 600;
 }
 </style>
