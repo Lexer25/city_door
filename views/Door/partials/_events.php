@@ -3,9 +3,9 @@
     <div class="panel-heading">
         <h3 class="panel-title">
             <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
-            <?php echo __('events_for_door', array(':count' => isset($events) ? count($events) : 0)); ?>
-            
+            <?php echo __('События'); ?>
             <span class="pull-right">
+                <span class="badge" id="eventsBadge">0</span>
                 <button class="btn btn-xs btn-primary" onclick="location.reload();">
                     <span class="glyphicon glyphicon-refresh"></span>
                 </button>
@@ -31,8 +31,9 @@
                                 <?php echo __('С'); ?>
                             </span>
                             <input type="text" class="form-control" id="eventTimeFrom" 
+                                   name="eventTimeFrom"
                                    placeholder="DD.MM.YYYY HH:mm"
-                                   value="<?php echo date('d.m.Y H:i', strtotime('-7 days')); ?>"
+                                   value="<?php echo date('d.m.Y') . ' 00:00'; ?>"
                                    style="font-size: 13px;">
                             <span class="input-group-addon">
                                 <span class="glyphicon glyphicon-calendar"></span>
@@ -48,6 +49,7 @@
                                 <?php echo __('По'); ?>
                             </span>
                             <input type="text" class="form-control" id="eventTimeTo" 
+                                   name="eventTimeTo"
                                    placeholder="DD.MM.YYYY HH:mm"
                                    value="<?php echo date('d.m.Y H:i'); ?>"
                                    style="font-size: 13px;">
@@ -82,44 +84,25 @@
                         <th><?php echo __('DATETIME'); ?></th>
                         <th><?php echo __('card'); ?></th>
                         <th><?php echo __('name'); ?></th>
+                        <th><?php echo __('org_name'); ?></th>
                         <th><?php echo __('NAME_EVENT'); ?></th>
                         <th><?php echo __('NAME'); ?></th>
                     </tr>
                 </thead>
                 <tbody id="eventsBody">
-                    <?php if (isset($events) && !empty($events)): ?>
-                        <?php foreach ($events as $value):
-                            $tr_color = (Arr::get($value, 'ID_EVENTTYPE') == 50) ? 'success' : 'warning';
-                        ?>
-                            <tr class="<?php echo $tr_color; ?>">
-                                <td><?php echo date("d.m.Y H:i:s", strtotime(Arr::get($value, 'DATETIME'))); ?></td>
-                                <td>
-                                    <span class="label label-default"><?php echo Arr::get($value, 'ID_CARD'); ?></span>
-                                </td>
-                                <td>
-                                    <?php echo HTML::anchor(
-                                        '/people/peopleInfo/' . Arr::get($value, 'ID_PEP') . '/' . Arr::get($value, 'ID_CARD'),
-                                        Arr::get($value, 'NOTE')
-                                    ); ?>
-                                </td>
-                                <td><?php echo Arr::get($value, 'NAME'); ?></td>
-                                <td><?php echo Arr::get($value, 'DEV_NAME'); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr id="noEventsRow">
-                            <td colspan="5" class="text-center text-muted">
-                                <?php echo __('Нет событий за выбранный период'); ?>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
+                    <!-- Тело таблицы заполняется через AJAX -->
+                    <tr id="noEventsRow">
+                        <td colspan="5" class="text-center text-muted">
+                            <?php echo __('Загрузка событий...'); ?>
+                        </td>
+                    </tr>
                 </tbody>
                 <tfoot>
                     <tr class="active">
                         <td colspan="5">
                             <small class="text-muted">
                                 <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
-                                <?php echo __('Всего событий') . ': <span id="eventsTotalCount">' . (isset($events) ? count($events) : 0) . '</span>'; ?>
+                                <?php echo __('Всего событий') . ': <span id="eventsTotalCount">0</span>'; ?>
                             </small>
                         </td>
                     </tr>
@@ -132,30 +115,27 @@
 <script type="text/javascript">
 $(document).ready(function() {
     // Получаем ID двери из URL
-    var doorId = <?php echo isset($door) ? (int)$door['ID_DEV'] : (int)$this->request->param('id'); ?>;
-    console.log('Door ID:', doorId); // Для отладки
+    var doorId = <?php echo isset($door) ? (int)$door['ID_DEV'] : 0; ?>;
     
     // Если doorId не определен, пытаемся получить из URL
     if (!doorId || doorId === 0) {
         var path = window.location.pathname;
         var parts = path.split('/');
         doorId = parseInt(parts[parts.length - 1]);
-        console.log('Door ID from URL:', doorId);
     }
     
-    // Инициализация datetimepicker для событий
-    var dateEnd = new Date();
-    dateEnd.setHours(23, 59, 59, 0);
+    console.log('Door ID:', doorId);
     
-    var dateBegin = new Date();
-    dateBegin.setHours(0, 0, 0, 0);
-    dateBegin.setDate(dateBegin.getDate() - 7); // По умолчанию за 7 дней
+    // Инициализация datetimepicker для событий (текущие сутки с 00:00)
+    var now = new Date();
+    var todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
     
     $("#eventDatetimepicker1").datetimepicker({
         language: 'ru',
         showToday: true,
         sideBySide: true,
-        defaultDate: dateBegin,
+        defaultDate: todayStart,
         format: 'DD.MM.YYYY HH:mm'
     });
     
@@ -163,18 +143,35 @@ $(document).ready(function() {
         language: 'ru',
         showToday: true,
         sideBySide: true,
-        defaultDate: dateEnd,
+        defaultDate: now,
         format: 'DD.MM.YYYY HH:mm'
     });
     
     // Связываем даты
     $("#eventDatetimepicker1").on("dp.change", function(e) {
         $("#eventDatetimepicker2").data("DateTimePicker").setMinDate(e.date);
+        updateEventTimeFrom();
     });
     
     $("#eventDatetimepicker2").on("dp.change", function(e) {
         $("#eventDatetimepicker1").data("DateTimePicker").setMaxDate(e.date);
+        updateEventTimeTo();
     });
+    
+    // Функции обновления полей
+    function updateEventTimeFrom() {
+        var val = $('#eventDatetimepicker1').data("DateTimePicker").date();
+        if (val) {
+            $('#eventTimeFrom').val(val.format('DD.MM.YYYY HH:mm'));
+        }
+    }
+    
+    function updateEventTimeTo() {
+        var val = $('#eventDatetimepicker2').data("DateTimePicker").date();
+        if (val) {
+            $('#eventTimeTo').val(val.format('DD.MM.YYYY HH:mm'));
+        }
+    }
     
     // Инициализация таблицы событий
     $("#table3").tablesorter({
@@ -200,16 +197,16 @@ $(document).ready(function() {
     
     // ========== Сброс фильтра ==========
     $('#resetEventsBtn').on('click', function() {
-        // Сбрасываем на последние 7 дней
+        // Сбрасываем на текущие сутки с 00:00
         var now = new Date();
-        var sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        var todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
         
-        $('#eventTimeFrom').val(formatDate(sevenDaysAgo));
+        $('#eventTimeFrom').val(formatDate(todayStart));
         $('#eventTimeTo').val(formatDate(now));
         
         // Обновляем datetimepicker
-        $("#eventDatetimepicker1").data("DateTimePicker").setDate(sevenDaysAgo);
+        $("#eventDatetimepicker1").data("DateTimePicker").setDate(todayStart);
         $("#eventDatetimepicker2").data("DateTimePicker").setDate(now);
         
         if (doorId && doorId !== 0) {
@@ -221,6 +218,10 @@ $(document).ready(function() {
     function loadEvents() {
         var timeFrom = $('#eventTimeFrom').val();
         var timeTo = $('#eventTimeTo').val();
+        
+        console.log('timeFrom:', timeFrom);
+        console.log('timeTo:', timeTo);
+        console.log('doorId:', doorId);
         
         if (!timeFrom || !timeTo) {
             alert('Пожалуйста, выберите обе даты');
@@ -246,6 +247,7 @@ $(document).ready(function() {
             timeout: 30000,
             success: function(response) {
                 $('#eventSpinner').hide();
+                console.log('Response:', response);
                 if (response.success) {
                     updateEventsTable(response.data);
                 } else {
@@ -261,9 +263,12 @@ $(document).ready(function() {
         });
     }
     
-    function updateEventsTable(data) {
+    function updateEventsTable_(data) {
         var $tbody = $('#eventsBody');
         $tbody.empty();
+        
+        // Обновляем бейдж
+        $('#eventsBadge').text(data ? data.length : 0);
         
         if (!data || data.length === 0) {
             $tbody.html('<tr id="noEventsRow"><td colspan="5" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
@@ -276,7 +281,8 @@ $(document).ready(function() {
             var row = '<tr class="' + trClass + '">' +
                 '<td>' + item.DATETIME + '</td>' +
                 '<td><span class="label label-default">' + item.ID_CARD + '</span></td>' +
-                '<td><a href="/people/peopleInfo/' + item.ID_PEP + '/' + item.ID_CARD + '">' + escapeHtml(item.NOTE) + '</a></td>' +
+               '<td><a href="/people/peopleInfo/' + item.ID_PEP + '/' + item.ID_CARD + '">' + escapeHtml(item.NOTE) + '</a></td>' +
+			    '<td>' + escapeHtml(item.ORG_NAME) + '</td>' +
                 '<td>' + escapeHtml(item.NAME) + '</td>' +
                 '<td>' + escapeHtml(item.DEV_NAME) + '</td>' +
                 '</tr>';
@@ -286,6 +292,35 @@ $(document).ready(function() {
         $('#eventsTotalCount').text(data.length);
         $("#table3").trigger("update");
     }
+	
+	function updateEventsTable(data) {
+    var $tbody = $('#eventsBody');
+    $tbody.empty();
+    
+    if (!data || data.length === 0) {
+        $tbody.html('<tr id="noEventsRow"><td colspan="5" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
+        $('#eventsTotalCount').text(0);
+        return;
+    }
+    
+    $.each(data, function(index, item) {
+        var trClass = (item.ID_EVENTTYPE == 50) ? 'success' : 'warning';
+        var row = '<tr class="' + trClass + '">' +
+            '<td>' + item.DATETIME + '</td>' +
+            '<td><span class="label label-default">' + item.ID_CARD + '</span></td>' +
+            '<td><a href="' + item.PEOPLE_URL + '">' + escapeHtml(item.NOTE) + '</a></td>' +
+            '<td>' + escapeHtml(item.ORG_NAME) + '</td>' +
+			'<td>' + escapeHtml(item.NAME) + '</td>' +
+            '<td>' + escapeHtml(item.DEV_NAME) + '</td>' +
+            '</tr>';
+        $tbody.append(row);
+    });
+    
+    $('#eventsTotalCount').text(data.length);
+    $("#table3").trigger("update");
+}
+
+
     
     function formatDate(date) {
         var d = date.getDate();
@@ -300,6 +335,11 @@ $(document).ready(function() {
     function escapeHtml(text) {
         if (!text) return '';
         return $('<div>').text(text).html();
+    }
+    
+    // При загрузке страницы автоматически загружаем события
+    if (doorId && doorId !== 0) {
+        loadEvents();
     }
 });
 </script>

@@ -381,11 +381,19 @@ public function getDeviceGroupsWithHierarchy($id_door)
 
 public function event_door($id_door, $timeFrom = null, $timeTo = null)
 {
-    $sql = 'SELECT e.*, et.name, d.name as dev_name 
-            FROM event e
+    Log::instance()->add(Log::DEBUG, '384 Door '. Debug::vars($id_door, $timeFrom, $timeTo )); 
+	$sql = 'SELECT e.*, et.name, d.name as dev_name 
+            FROM events e
             JOIN eventtype et ON e.id_eventtype = et.id_eventtype
             JOIN device d ON e.id_dev = d.id_dev
             WHERE e.id_dev = ' . intval($id_door);
+			
+	$sql = 'SELECT e.id_card, e.ess1 as id_pep, o.name as org_name, e.note, et.name, d.name as dev_name
+            FROM events e
+            JOIN eventtype et ON e.id_eventtype = et.id_eventtype
+            JOIN device d ON e.id_dev = d.id_dev
+            join organization o on e.ess2=o.id_org
+			WHERE e.id_dev = ' . intval($id_door);			
     
     if ($timeFrom) {
         $timeFromDb = date('Y-m-d H:i:s', strtotime($timeFrom));
@@ -398,7 +406,7 @@ public function event_door($id_door, $timeFrom = null, $timeTo = null)
     }
     
     $sql .= ' ORDER BY e.datetime DESC';
-    
+ Log::instance()->add(Log::DEBUG, '401 Door '. $sql);   
     $query = DB::query(Database::SELECT, $sql)
         ->execute(Database::instance('fb'))
         ->as_array();
@@ -407,7 +415,7 @@ public function event_door($id_door, $timeFrom = null, $timeTo = null)
     $res = array();
     foreach ($query as $key => $value) {
         foreach ($value as $name => $data) {
-            if ($name == 'NAME' || $name == 'DEV_NAME' || $name == 'NOTE') {
+            if ($name == 'NAME' || $name == 'DEV_NAME' || $name == 'NOTE'|| $name == 'ORG_NAME') {
                 $res[$key][$name] = iconv('windows-1251', 'UTF-8//IGNORE', $data);
             } else {
                 $res[$key][$name] = $data;

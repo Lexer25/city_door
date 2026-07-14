@@ -29,54 +29,89 @@ include_once 'partials/_helpers.php';
 <!-- Группы устройств -->
 <?php include_once 'partials/_device_groups.php'; ?>
 
-<!-- Вкладки -->
-<?php
-// Подсчет количества записей для каждой вкладки
-$count_add = isset($people_add) ? count($people_add) : 0;
-$count_del = isset($people_del) ? count($people_del) : 0;
-$count_events = isset($events) ? count($events) : 0;
-$count_keys = isset($keys) ? count($keys) : 0;
-?>
+<!-- ===== РАСКРЫВАЮЩИЙСЯ РАЗДЕЛ С ТАБАМИ ===== -->
+<div class="panel panel-default" id="tabsPanel">
+    <div class="panel-heading" role="tab" id="tabsHeading">
+        <h4 class="panel-title">
+            <a role="button" 
+               data-toggle="collapse" 
+               data-parent="#accordion" 
+               href="#tabsCollapse" 
+               aria-expanded="true" 
+               aria-controls="tabsCollapse"
+               id="tabsToggle"
+               style="display: block; text-decoration: none; color: inherit;">
+                <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
+                <?php echo __('Управление картами и события'); ?>
 
-<ul class="nav nav-tabs" role="tablist">
-    <li class="active">
-        <a data-toggle="tab" href="#panel1">
-            <span class="glyphicon glyphicon-upload"></span>
-            <?php echo __('list_card_for_load', array(':count' => $count_add)); ?>
-        </a>
-    </li>
-    <li>
-        <a data-toggle="tab" href="#panel2">
-            <span class="glyphicon glyphicon-trash"></span>
-            <?php echo __('list_card_for_delete', array(':count' => $count_del)); ?>
-        </a>
-    </li>
-    <li>
-        <a data-toggle="tab" href="#panel3">
-            <span class="glyphicon glyphicon-list-alt"></span>
-            <?php echo __('events_for_door', array(':count' => $count_events)); ?>
-        </a>
-    </li>
-    <li>
-        <a data-toggle="tab" href="#panel4">
-            <span class="glyphicon glyphicon-ok-circle"></span>
-            <?php echo __('keys_for_door', array(':count' => $count_keys)); ?>
-        </a>
-    </li>
-</ul>
+                <span class="pull-right toggle-icon" style="margin-right: 10px;">
+                    <span class="glyphicon glyphicon-chevron-up" aria-hidden="true" id="tabsIconCollapse"></span>
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true" id="tabsIconExpand" style="display: none;"></span>
+                </span>
+            </a>
+        </h4>
+    </div>
+    <div id="tabsCollapse" 
+         class="panel-collapse collapse in" 
+         role="tabpanel" 
+         aria-labelledby="tabsHeading">
+        <div class="panel-body" style="padding: 15px;">
+            
+            <!-- Вкладки -->
+            <?php
+            $count_add = isset($people_add) ? count($people_add) : 0;
+            $count_del = isset($people_del) ? count($people_del) : 0;
+            $count_events = isset($events) ? count($events) : 0;
+            $count_keys = isset($keys) ? count($keys) : 0;
+            ?>
+            
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active">
+                    <a data-toggle="tab" href="#panel1">
+                        <span class="glyphicon glyphicon-upload"></span>
+                        <?php echo __('Очередь загрузки'); ?>
+                        <span class="badge" style="background-color: #f0ad4e;"><?php echo $count_add; ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a data-toggle="tab" href="#panel2">
+                        <span class="glyphicon glyphicon-trash"></span>
+                        <?php echo __('Очередь удаления'); ?>
+                        <span class="badge" style="background-color: #d9534f;"><?php echo $count_del; ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a data-toggle="tab" href="#panel3">
+                        <span class="glyphicon glyphicon-list-alt"></span>
+                        <?php echo __('События'); ?>
+                        <span class="badge" style="background-color: #337ab7;" id="eventsTabBadge"><?php echo $count_events; ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a data-toggle="tab" href="#panel4">
+                        <span class="glyphicon glyphicon-ok-circle"></span>
+                        <?php echo __('Загруженные карты'); ?>
+                        <span class="badge" style="background-color: #5cb85c;"><?php echo $count_keys; ?></span>
+                    </a>
+                </li>
+            </ul>
 
-<div class="tab-content" style="padding-top: 15px;">
-    <div id="panel1" class="tab-pane fade in active">
-        <?php include_once 'partials/_load_queue.php'; ?>
-    </div>
-    <div id="panel2" class="tab-pane fade">
-        <?php include_once 'partials/_delete_queue.php'; ?>
-    </div>
-    <div id="panel3" class="tab-pane fade">
-        <?php include_once 'partials/_events.php'; ?>
-    </div>
-    <div id="panel4" class="tab-pane fade">
-        <?php include_once 'partials/_keys.php'; ?>
+            <div class="tab-content" style="padding-top: 15px;">
+                <div id="panel1" class="tab-pane fade in active">
+                    <?php include_once 'partials/_load_queue.php'; ?>
+                </div>
+                <div id="panel2" class="tab-pane fade">
+                    <?php include_once 'partials/_delete_queue.php'; ?>
+                </div>
+                <div id="panel3" class="tab-pane fade">
+                    <?php include_once 'partials/_events.php'; ?>
+                </div>
+                <div id="panel4" class="tab-pane fade">
+                    <?php include_once 'partials/_keys.php'; ?>
+                </div>
+            </div>
+            
+        </div>
     </div>
 </div>
 
@@ -107,7 +142,8 @@ function initTables() {
 function setupCollapsibleIcons() {
     var panels = [
         { id: 'accessCollapse', iconUp: '#iconCollapse', iconDown: '#iconExpand', toggle: '#accessToggle' },
-        { id: 'deviceGroupsCollapse', iconUp: '#deviceGroupsIconCollapse', iconDown: '#deviceGroupsIconExpand', toggle: '#deviceGroupsToggle' }
+        { id: 'deviceGroupsCollapse', iconUp: '#deviceGroupsIconCollapse', iconDown: '#deviceGroupsIconExpand', toggle: '#deviceGroupsToggle' },
+        { id: 'tabsCollapse', iconUp: '#tabsIconCollapse', iconDown: '#tabsIconExpand', toggle: '#tabsToggle' }
     ];
     
     panels.forEach(function(panel) {
@@ -213,6 +249,26 @@ function filterTable(input, tableId) {
     transition: transform 0.3s ease;
 }
 
+/* Стили для вкладок внутри сворачиваемого блока */
+#tabsPanel .nav-tabs {
+    margin-bottom: 15px;
+}
+
+#tabsPanel .nav-tabs > li > a {
+    border-radius: 4px 4px 0 0;
+    padding: 8px 15px;
+}
+
+#tabsPanel .nav-tabs > li.active > a,
+#tabsPanel .nav-tabs > li.active > a:hover,
+#tabsPanel .nav-tabs > li.active > a:focus {
+    border-bottom-color: transparent;
+}
+
+#tabsPanel .nav-tabs .badge {
+    margin-left: 5px;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     #accessPanel .label {
@@ -223,6 +279,11 @@ function filterTable(input, tableId) {
     #deviceGroupsPanel .label {
         font-size: 11px !important;
         padding: 4px 8px !important;
+    }
+    
+    #tabsPanel .nav-tabs > li > a {
+        font-size: 12px;
+        padding: 6px 10px;
     }
 }
 
@@ -240,18 +301,22 @@ function filterTable(input, tableId) {
     animation: none;
 }
 
-/* Стили для панелей с вкладками */
-.nav-tabs {
-    margin-bottom: 20px;
+/* Стили для панели с вкладками */
+#tabsPanel .panel-heading {
+    background-color: #f5f5f5;
+    border-color: #ddd;
 }
 
-.nav-tabs > li > a {
-    border-radius: 4px 4px 0 0;
+#tabsPanel .panel-heading a {
+    color: #333;
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover,
-.nav-tabs > li.active > a:focus {
-    border-bottom-color: transparent;
+#tabsPanel .panel-heading a:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Бейдж в заголовке */
+#tabsPanel .badge {
+    background-color: #777;
 }
 </style>
