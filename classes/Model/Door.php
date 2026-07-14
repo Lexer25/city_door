@@ -379,6 +379,47 @@ public function getDeviceGroupsWithHierarchy($id_door)
     return $res;
 }
 
+public function event_door($id_door, $timeFrom = null, $timeTo = null)
+{
+    $sql = 'SELECT e.*, et.name, d.name as dev_name 
+            FROM event e
+            JOIN eventtype et ON e.id_eventtype = et.id_eventtype
+            JOIN device d ON e.id_dev = d.id_dev
+            WHERE e.id_dev = ' . intval($id_door);
+    
+    if ($timeFrom) {
+        $timeFromDb = date('Y-m-d H:i:s', strtotime($timeFrom));
+        $sql .= " AND e.datetime >= '" . $timeFromDb . "'";
+    }
+    
+    if ($timeTo) {
+        $timeToDb = date('Y-m-d H:i:s', strtotime($timeTo));
+        $sql .= " AND e.datetime <= '" . $timeToDb . "'";
+    }
+    
+    $sql .= ' ORDER BY e.datetime DESC';
+    
+    $query = DB::query(Database::SELECT, $sql)
+        ->execute(Database::instance('fb'))
+        ->as_array();
+    
+    // Конвертация кодировки
+    $res = array();
+    foreach ($query as $key => $value) {
+        foreach ($value as $name => $data) {
+            if ($name == 'NAME' || $name == 'DEV_NAME' || $name == 'NOTE') {
+                $res[$key][$name] = iconv('windows-1251', 'UTF-8//IGNORE', $data);
+            } else {
+                $res[$key][$name] = $data;
+            }
+        }
+    }
+    
+    return $res;
+}
+
+
+
 }
 	
 

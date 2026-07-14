@@ -9,3 +9,11 @@ Kohana::$config->load('menu')
         'order' => 40,
        
     ));
+	
+	
+	// AJAX маршрут для получения событий
+Route::set('door_getEvents', 'door/getEvents/<id>', array('id' => '\d+'))
+    ->defaults(array(
+        'controller' => 'Door',
+        'action' => 'getEvents',
+    ));

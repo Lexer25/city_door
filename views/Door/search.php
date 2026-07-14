@@ -1,36 +1,7 @@
 <script type="text/javascript">
 $(function() {
-    // Инициализация datetimepicker
-    var dateEnd = new Date();
-    dateEnd.setHours(23, 59, 59, 0);
-    
-    var dateBegin = new Date();
-    dateBegin.setHours(0, 0, 0, 0);
-    
-    $("#datetimepicker1").datetimepicker({
-        language: 'ru',
-        showToday: true,
-        sideBySide: true,
-        defaultDate: dateBegin,
-        format: 'DD.MM.YYYY HH:mm'
-    });
-    
-    $("#datetimepicker2").datetimepicker({
-        language: 'ru',
-        showToday: true,
-        sideBySide: true,
-        defaultDate: dateEnd,
-        format: 'DD.MM.YYYY HH:mm'
-    });
-    
-    // Связываем даты
-    $("#datetimepicker1").on("dp.change", function(e) {
-        $("#datetimepicker2").data("DateTimePicker").setMinDate(e.date);
-    });
-    
-    $("#datetimepicker2").on("dp.change", function(e) {
-        $("#datetimepicker1").data("DateTimePicker").setMaxDate(e.date);
-    });
+    // Инициализация datetimepicker (удаляем, так как они больше не нужны)
+    // Оставляем только для совместимости, но скрываем
     
     // Инициализация таблицы с настройками сортировки
     $("#table1").tablesorter({
@@ -58,20 +29,8 @@ $(function() {
         // Если поле пустое - очищаем таблицу и НЕ отправляем запрос
         if (term.length === 0) {
             $('#searchHelp').hide();
-            // Проверяем, есть ли даты
-            var timeFrom = $('input[name="timeFrom"]').val();
-            var timeTo = $('input[name="timeTo"]').val();
-            
-            if (!timeFrom && !timeTo) {
-                // Нет ни поиска, ни дат - показываем сообщение
-                $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
-                $('#totalRecords').text(0);
-            } else {
-                // Есть даты - отправляем запрос с пустым поиском
-                searchTimeout = setTimeout(function() {
-                    performSearch();
-                }, 300);
-            }
+            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос</td></tr>');
+            $('#totalRecords').text(0);
             return;
         }
         
@@ -88,33 +47,10 @@ $(function() {
         }, 300);
     });
     
-    // ========== Фильтр по датам ==========
-    $('#applyDateFilter').on('click', function() {
-        var timeFrom = $('input[name="timeFrom"]').val();
-        var timeTo = $('input[name="timeTo"]').val();
-        var term = $('#doorSearchInput').val().trim();
-        
-        // Если нет ни поиска, ни дат - показываем сообщение
-        if (!term && !timeFrom && !timeTo) {
-            alert('Пожалуйста, введите поисковый запрос или выберите даты');
-            return;
-        }
-        
-        // Если поиск меньше 3 символов и не пустой - показываем подсказку
-        if (term.length > 0 && term.length < 3) {
-            $('#searchHelp').show();
-            return;
-        }
-        
-        performSearch();
-    });
-    
     // ========== Показать все ==========
     $('#showAllBtn').on('click', function() {
         // Очищаем поля
         $('#doorSearchInput').val('');
-        $('input[name="timeFrom"]').val('');
-        $('input[name="timeTo"]').val('');
         $('#searchHelp').hide();
         
         // Отправляем запрос с параметром showAll
@@ -123,19 +59,23 @@ $(function() {
     
     // ========== Сброс фильтра ==========
     $('#resetDateFilter').on('click', function() {
-        $('input[name="timeFrom"]').val('');
-        $('input[name="timeTo"]').val('');
         $('#doorSearchInput').val('');
         $('#searchHelp').hide();
-        $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+        $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос</td></tr>');
+        $('#totalRecords').text(0);
+    });
+    
+    // Очистка поиска
+    $('#clearSearch').on('click', function() {
+        $('#doorSearchInput').val('');
+        $('#searchHelp').hide();
+        $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос</td></tr>');
         $('#totalRecords').text(0);
     });
     
     // ========== Общая функция поиска ==========
     function performSearch(showAll) {
         var term = $('#doorSearchInput').val().trim();
-        var timeFrom = $('input[name="timeFrom"]').val();
-        var timeTo = $('input[name="timeTo"]').val();
         
         // Если showAll = true - показываем все записи
         if (showAll) {
@@ -167,9 +107,9 @@ $(function() {
             return;
         }
         
-        // Если поиск пустой и даты не выбраны - НЕ отправляем запрос
-        if (!term && !timeFrom && !timeTo) {
-            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
+        // Если поиск пустой - НЕ отправляем запрос
+        if (!term) {
+            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос</td></tr>');
             $('#totalRecords').text(0);
             return;
         }
@@ -180,21 +120,13 @@ $(function() {
             return;
         }
         
-        // Если поиск пустой, но есть даты - отправляем запрос
-        // Если поиск >= 3 символов - отправляем запрос
-        if (term.length === 0 && !timeFrom && !timeTo) {
-            return;
-        }
-        
         $('#searchSpinner').show();
         
         $.ajax({
             url: '<?php echo URL::site("door/find"); ?>',
             type: 'GET',
             data: {
-                doorInfo: term,
-                timeFrom: timeFrom,
-                timeTo: timeTo
+                doorInfo: term
             },
             dataType: 'json',
             cache: false,
@@ -212,14 +144,6 @@ $(function() {
                 console.log('AJAX Error:', status, error);
                 console.log('Response:', xhr.responseText);
                 
-                // Игнорируем ошибки при пустом запросе
-                var term = $('#doorSearchInput').val().trim();
-                var timeFrom = $('input[name="timeFrom"]').val();
-                var timeTo = $('input[name="timeTo"]').val();
-                if (!term && !timeFrom && !timeTo) {
-                    return;
-                }
-                
                 if (status === 'abort' || status === 'canceled') {
                     return;
                 }
@@ -227,9 +151,7 @@ $(function() {
                 if (status === 'timeout') {
                     alert('Превышено время ожидания ответа от сервера. Попробуйте еще раз.');
                 } else {
-                    // Проверяем, не вернул ли сервер HTML вместо JSON
                     if (xhr.responseText && xhr.responseText.indexOf('<!DOCTYPE') !== -1) {
-                        // Сервер вернул HTML - значит ошибка на сервере
                         alert('Ошибка на сервере. Пожалуйста, проверьте правильность введенных данных.');
                     } else {
                         alert('Произошла ошибка при выполнении запроса. Пожалуйста, попробуйте еще раз.');
@@ -335,57 +257,6 @@ $(function() {
             </div>
         </div>
         
-        <!-- Фильтр по дате событий -->
-        <div class="row" style="margin-bottom: 15px; background: #f9f9f9; padding: 12px 15px; border-radius: 4px; border: 1px solid #e7e7e7;">
-            <div class="col-md-12">
-                <div style="margin-bottom: 8px;">
-                    <span class="glyphicon glyphicon-calendar" style="color: #337ab7;"></span>
-                    <strong style="font-size: 13px;"><?php echo __('Фильтр по дате событий'); ?></strong>
-                    <span style="font-weight: normal; font-size: 11px; color: #999; margin-left: 10px;">
-                        <?php echo __('Выберите период и нажмите "Применить"'); ?>
-                    </span>
-                </div>
-                <div class="row">
-                    <div class="col-xs-5">
-                        <div class="input-group date" id="datetimepicker1">
-                            <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
-                                <?php echo __('С'); ?>
-                            </span>
-                            <input type="text" class="form-control" name="timeFrom" 
-                                   placeholder="DD.MM.YYYY HH:mm"
-                                   value="<?php echo isset($timeFrom) ? htmlspecialchars($timeFrom) : ''; ?>"
-                                   style="font-size: 13px;">
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-xs-1 text-center" style="padding-top: 5px;">
-                        <span class="text-muted" style="font-size: 18px;">—</span>
-                    </div>
-                    <div class="col-xs-5">
-                        <div class="input-group date" id="datetimepicker2">
-                            <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
-                                <?php echo __('По'); ?>
-                            </span>
-                            <input type="text" class="form-control" name="timeTo" 
-                                   placeholder="DD.MM.YYYY HH:mm"
-                                   value="<?php echo isset($timeTo) ? htmlspecialchars($timeTo) : ''; ?>"
-                                   style="font-size: 13px;">
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-xs-1" style="padding-top: 5px;">
-                        <button type="button" class="btn btn-sm btn-success" id="applyDateFilter" style="width: 100%;">
-                            <span class="glyphicon glyphicon-ok"></span> <?php echo __('Применить'); ?>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Таблица результатов -->
         <div class="table-responsive" style="margin-top: 15px;">
             <table class="table table-striped table-bordered table-hover" id="table1">
@@ -421,7 +292,7 @@ $(function() {
                     <?php else: ?>
                         <tr>
                             <td colspan="5" class="text-center text-muted">
-                                <?php echo isset($searchTerm) && !empty($searchTerm) ? __('Ничего не найдено') : __('Введите поисковый запрос или выберите даты'); ?>
+                                <?php echo isset($searchTerm) && !empty($searchTerm) ? __('Ничего не найдено') : __('Введите поисковый запрос'); ?>
                             </td>
                         </tr>
                     <?php endif; ?>
