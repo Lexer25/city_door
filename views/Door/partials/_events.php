@@ -99,7 +99,7 @@
                 </tbody>
                 <tfoot>
                     <tr class="active">
-                        <td colspan="5">
+                        <td colspan="6">
                             <small class="text-muted">
                                 <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
                                 <?php echo __('Всего событий') . ': <span id="eventsTotalCount">0</span>'; ?>
@@ -271,7 +271,7 @@ $(document).ready(function() {
         $('#eventsBadge').text(data ? data.length : 0);
         
         if (!data || data.length === 0) {
-            $tbody.html('<tr id="noEventsRow"><td colspan="5" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
+            $tbody.html('<tr id="noEventsRow"><td colspan="6" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
             $('#eventsTotalCount').text(0);
             return;
         }
@@ -298,7 +298,7 @@ $(document).ready(function() {
     $tbody.empty();
     
     if (!data || data.length === 0) {
-        $tbody.html('<tr id="noEventsRow"><td colspan="5" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
+        $tbody.html('<tr id="noEventsRow"><td colspan="6" class="text-center text-muted"><?php echo __('Нет событий за выбранный период'); ?></td></tr>');
         $('#eventsTotalCount').text(0);
         return;
     }

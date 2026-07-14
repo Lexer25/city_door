@@ -114,6 +114,7 @@ class Controller_Door extends Controller_Template
 					'ID_PEP' => Arr::get($event, 'ID_PEP'),
 					'NOTE' => Arr::get($event, 'NOTE'),
 					'NAME' => Arr::get($event, 'NAME'),
+					'ORG_NAME' => Arr::get($event, 'ORG_NAME'),
 					'DEV_NAME' => Arr::get($event, 'DEV_NAME'),
 					'ID_EVENTTYPE' => Arr::get($event, 'ID_EVENTTYPE'),
 					// Добавляем готовую ссылку
