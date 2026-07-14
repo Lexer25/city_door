@@ -109,7 +109,19 @@ $(function() {
         performSearch();
     });
     
-    // Сброс фильтра
+    // ========== Показать все ==========
+    $('#showAllBtn').on('click', function() {
+        // Очищаем поля
+        $('#doorSearchInput').val('');
+        $('input[name="timeFrom"]').val('');
+        $('input[name="timeTo"]').val('');
+        $('#searchHelp').hide();
+        
+        // Отправляем запрос с параметром showAll
+        performSearch(true);
+    });
+    
+    // ========== Сброс фильтра ==========
     $('#resetDateFilter').on('click', function() {
         $('input[name="timeFrom"]').val('');
         $('input[name="timeTo"]').val('');
@@ -119,26 +131,41 @@ $(function() {
         $('#totalRecords').text(0);
     });
     
-    // Очистка поиска
-    $('#clearSearch').on('click', function() {
-        $('#doorSearchInput').val('');
-        $('#searchHelp').hide();
-        
-        var timeFrom = $('input[name="timeFrom"]').val();
-        var timeTo = $('input[name="timeTo"]').val();
-        if (!timeFrom && !timeTo) {
-            $('#table1 tbody').html('<tr><td colspan="5" class="text-center text-muted">Введите поисковый запрос или выберите даты</td></tr>');
-            $('#totalRecords').text(0);
-        } else {
-            performSearch();
-        }
-    });
-    
     // ========== Общая функция поиска ==========
-    function performSearch() {
+    function performSearch(showAll) {
         var term = $('#doorSearchInput').val().trim();
         var timeFrom = $('input[name="timeFrom"]').val();
         var timeTo = $('input[name="timeTo"]').val();
+        
+        // Если showAll = true - показываем все записи
+        if (showAll) {
+            $('#searchSpinner').show();
+            $.ajax({
+                url: '<?php echo URL::site("door/find"); ?>',
+                type: 'GET',
+                data: {
+                    showAll: 1
+                },
+                dataType: 'json',
+                cache: false,
+                timeout: 30000,
+                success: function(response) {
+                    $('#searchSpinner').hide();
+                    if (response.success) {
+                        updateTable(response.data);
+                    } else {
+                        alert('Ошибка при поиске: ' + (response.error || 'Неизвестная ошибка'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#searchSpinner').hide();
+                    console.log('AJAX Error:', status, error);
+                    console.log('Response:', xhr.responseText);
+                    alert('Произошла ошибка при выполнении запроса. Пожалуйста, попробуйте еще раз.');
+                }
+            });
+            return;
+        }
         
         // Если поиск пустой и даты не выбраны - НЕ отправляем запрос
         if (!term && !timeFrom && !timeTo) {
@@ -273,9 +300,9 @@ $(function() {
     </div>
     <div class="panel-body">
         
-        <!-- Поиск по названию -->
+        <!-- Поиск по названию (автоматический) -->
         <div class="row" style="margin-bottom: 15px;">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <div class="input-group">
                     <span class="input-group-addon">
                         <span class="glyphicon glyphicon-search"></span>
@@ -298,9 +325,9 @@ $(function() {
                     <?php echo __('Поиск...'); ?>
                 </span>
             </div>
-            <div class="col-md-4 text-right">
-                <button type="button" class="btn btn-primary" id="applyDateFilter">
-                    <span class="glyphicon glyphicon-filter"></span> <?php echo __('Применить'); ?>
+            <div class="col-md-6 text-right">
+                <button type="button" class="btn btn-primary" id="showAllBtn">
+                    <span class="glyphicon glyphicon-list"></span> <?php echo __('Показать все'); ?>
                 </button>
                 <button type="button" class="btn btn-default" id="resetDateFilter">
                     <span class="glyphicon glyphicon-refresh"></span> <?php echo __('Сбросить'); ?>
@@ -308,53 +335,56 @@ $(function() {
             </div>
         </div>
         
-<!-- Фильтр по дате событий -->
-<div class="row" style="margin-bottom: 15px; background: #f9f9f9; padding: 12px 15px; border-radius: 4px; border: 1px solid #e7e7e7;">
-    <div class="col-md-12">
-        <div style="margin-bottom: 8px;">
-            <span class="glyphicon glyphicon-calendar" style="color: #337ab7;"></span>
-            <strong style="font-size: 13px;"><?php echo __('Фильтр по дате событий'); ?></strong>
-            <span style="font-weight: normal; font-size: 11px; color: #999; margin-left: 10px;">
-                <span class="glyphicon glyphicon-info-sign"></span>
-                <?php echo __('Выберите период для фильтрации'); ?>
-            </span>
-        </div>
-        <div class="row">
-            <div class="col-xs-5">
-                <div class="input-group date" id="datetimepicker1">
-                    <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
-                        <?php echo __('С'); ?>
-                    </span>
-                    <input type="text" class="form-control" name="timeFrom" 
-                           placeholder="DD.MM.YYYY HH:mm"
-                           value="<?php echo isset($timeFrom) ? htmlspecialchars($timeFrom) : ''; ?>"
-                           style="font-size: 13px;">
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
+        <!-- Фильтр по дате событий -->
+        <div class="row" style="margin-bottom: 15px; background: #f9f9f9; padding: 12px 15px; border-radius: 4px; border: 1px solid #e7e7e7;">
+            <div class="col-md-12">
+                <div style="margin-bottom: 8px;">
+                    <span class="glyphicon glyphicon-calendar" style="color: #337ab7;"></span>
+                    <strong style="font-size: 13px;"><?php echo __('Фильтр по дате событий'); ?></strong>
+                    <span style="font-weight: normal; font-size: 11px; color: #999; margin-left: 10px;">
+                        <?php echo __('Выберите период и нажмите "Применить"'); ?>
                     </span>
                 </div>
-            </div>
-            <div class="col-xs-1 text-center" style="padding-top: 5px;">
-                <span class="text-muted" style="font-size: 18px;">—</span>
-            </div>
-            <div class="col-xs-5">
-                <div class="input-group date" id="datetimepicker2">
-                    <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
-                        <?php echo __('По'); ?>
-                    </span>
-                    <input type="text" class="form-control" name="timeTo" 
-                           placeholder="DD.MM.YYYY HH:mm"
-                           value="<?php echo isset($timeTo) ? htmlspecialchars($timeTo) : ''; ?>"
-                           style="font-size: 13px;">
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
+                <div class="row">
+                    <div class="col-xs-5">
+                        <div class="input-group date" id="datetimepicker1">
+                            <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
+                                <?php echo __('С'); ?>
+                            </span>
+                            <input type="text" class="form-control" name="timeFrom" 
+                                   placeholder="DD.MM.YYYY HH:mm"
+                                   value="<?php echo isset($timeFrom) ? htmlspecialchars($timeFrom) : ''; ?>"
+                                   style="font-size: 13px;">
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-xs-1 text-center" style="padding-top: 5px;">
+                        <span class="text-muted" style="font-size: 18px;">—</span>
+                    </div>
+                    <div class="col-xs-5">
+                        <div class="input-group date" id="datetimepicker2">
+                            <span class="input-group-addon" style="background: #fff; font-size: 11px; color: #666; border-color: #ddd;">
+                                <?php echo __('По'); ?>
+                            </span>
+                            <input type="text" class="form-control" name="timeTo" 
+                                   placeholder="DD.MM.YYYY HH:mm"
+                                   value="<?php echo isset($timeTo) ? htmlspecialchars($timeTo) : ''; ?>"
+                                   style="font-size: 13px;">
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-xs-1" style="padding-top: 5px;">
+                        <button type="button" class="btn btn-sm btn-success" id="applyDateFilter" style="width: 100%;">
+                            <span class="glyphicon glyphicon-ok"></span> <?php echo __('Применить'); ?>
+                        </button>
+                    </div>
                 </div>
             </div>
-
         </div>
-    </div>
-</div>
         
         <!-- Таблица результатов -->
         <div class="table-responsive" style="margin-top: 15px;">

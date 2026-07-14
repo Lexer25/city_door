@@ -3,9 +3,41 @@
 class Model_Door extends Model
 {
 	
-public function findIdDoor ($search) // поиск двери по названию
+public function findIdDoor ($search, $showAll = false)
 {
-    // Если поиск пустой - возвращаем пустой массив, а не NULL
+    // Если showAll = true - возвращаем все записи
+    if ($showAll) {
+        $sql = 'SELECT DISTINCT d.id_dev, d.name, d."ACTIVE", 
+                    d2.id_dev as id_dev_dev, d2.name as device_name, d2."ACTIVE" as device_active, 
+                    s.name as server_name, s.ip, s.port, s."ACTIVE" as server_active, 
+                    cd.operation, COUNT(*) 
+                FROM device d
+                JOIN device d2 ON d2.id_ctrl = d.id_ctrl AND d2.id_reader IS NULL
+                JOIN server s ON d2.id_server = s.id_server
+                LEFT JOIN cardindev cd ON d.id_dev = cd.id_dev
+                WHERE d.id_reader IS NOT NULL
+                GROUP BY d.id_dev, d.name, d."ACTIVE", d2.id_dev, d2.name, d2."ACTIVE", 
+                    s.name, s.ip, s.port, s."ACTIVE", cd.operation
+                ORDER BY d.name';
+                
+        $query = DB::query(Database::SELECT, $sql)
+            ->execute(Database::instance('fb'))
+            ->as_array();
+            
+        $res = array();
+        foreach ($query as $key => $value) {
+            foreach ($value as $name => $data) {
+                if ($name == 'NAME' || $name == 'DEVICE_NAME' || $name == 'SERVER_NAME') {
+                    $res[$key][$name] = iconv('windows-1251', 'UTF-8', $data);
+                } else {
+                    $res[$key][$name] = $data;
+                }
+            }
+        }
+        return $res;
+    }
+    
+    // Если поиск пустой - возвращаем пустой массив
     if ($search == NULL || trim($search) == '') {
         return array();
     }

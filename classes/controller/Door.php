@@ -17,26 +17,32 @@ class Controller_Door extends Controller_Template
      
 public function action_find()
 {
-   
+    $_SESSION['menu_active'] = 'door';
+    
     // Получаем параметры поиска
     $search = Arr::get($_GET, 'doorInfo', '');
     $timeFrom = Arr::get($_GET, 'timeFrom', '');
     $timeTo = Arr::get($_GET, 'timeTo', '');
+    $showAll = (bool)Arr::get($_GET, 'showAll', 0);
     
     // Сохраняем в сессию
     if ($timeFrom) $_SESSION['doorEventsTimeFrom'] = $timeFrom;
     if ($timeTo) $_SESSION['doorEventsTimeTo'] = $timeTo;
     
-    // ВСЕГДА выполняем поиск, даже если поиск пустой
-    // Модель вернет пустой массив, если поиск пустой
-    $result = Model::Factory('Door')->findIdDoor($search);
+    // Выполняем поиск
+    $model = Model::Factory('Door');
+    
+    if ($showAll) {
+        $result = $model->findIdDoor('', true);
+    } else {
+        $result = $model->findIdDoor($search);
+    }
     
     // Проверяем, AJAX ли запрос
     if ($this->request->is_ajax()) {
         $this->auto_render = false;
         header('Content-Type: application/json');
         
-        // Преобразуем результат в нужный формат
         $data = array();
         foreach ($result as $item) {
             $data[] = array(
